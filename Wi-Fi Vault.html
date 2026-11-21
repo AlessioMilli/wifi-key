@@ -1,0 +1,1421 @@
+```html
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#121212">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Wi-Fi Key">
+    <title>Wi-Fi Key</title>
+
+    <!-- Icona SVG Wi-Fi integrata per scheda browser e iOS -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%232563eb'/%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='42' stroke-linecap='round' stroke-linejoin='round' d='M172 350a118 118 0 0 1 168 0M256 426h.01M104 274c84-84 220-84 304 0M36 200c122-122 318-122 440 0'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%232563eb'/%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='42' stroke-linecap='round' stroke-linejoin='round' d='M172 350a118 118 0 0 1 168 0M256 426h.01M104 274c84-84 220-84 304 0M36 200c122-122 318-122 440 0'/%3E%3C/svg%3E">
+
+    <!-- Web App Manifest incorporato inline per installazione PWA -->
+    <link id="pwa-manifest" rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Wi-Fi%20Key%22%2C%22short_name%22%3A%22Wi-Fi%20Key%22%2C%22description%22%3A%22Cassaforte%20offline%20per%20le%20password%20Wi-Fi%20con%20QR%20Code%20e%20Biometria%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23121212%22%2C%22theme_color%22%3A%22%23121212%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%2520viewBox%3D'0%200%20512%20512'%253E%253Crect%2520width%3D'512'%2520height%3D'512'%2520rx%3D'112'%2520fill%3D'%25232563eb'%2F%253E%253Cpath%2520fill%3D'none'%2520stroke%3D'%23ffffff'%2520stroke-width%3D'42'%2520stroke-linecap%3D'round'%2520stroke-linejoin%3D'round'%2520d%3D'M172%20350a118%20118%200%200%201%20168%200M256%20426h.01M104%20274c84-84%20220-84%20304%200M36%20200c122-122%20318-122%20440%200'%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%20512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Libreria QRCode.js per generare codici QR standard offline -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        darkbg: '#121212',
+                        darkcard: '#1E1E24',
+                        darkinput: '#26262E'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #121212;
+            color: #F8FAFC;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: contain;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2E2E38;
+            border-radius: 9999px;
+        }
+        #qr-container img, #qr-container canvas {
+            margin: 0 auto;
+            border-radius: 0.75rem;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-entry {
+            animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- ===================================================================== -->
+    <!-- SCHERMATA 1: AUTENTICAZIONE (ACCEDI E REGISTRATI)                      -->
+    <!-- ===================================================================== -->
+    <div id="auth-screen" class="min-h-screen flex flex-col justify-center items-center px-5 py-8 max-w-md mx-auto w-full">
+        <!-- Logo & Titolo -->
+        <div class="text-center mb-6 animate-entry">
+            <div class="w-16 h-16 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 mx-auto flex items-center justify-center shadow-xl shadow-blue-600/25 mb-4">
+                <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold text-white tracking-tight">Wi-Fi Key</h1>
+            <p class="text-sm text-slate-400 mt-1">Le tue chiavi Wi-Fi sempre pronte</p>
+        </div>
+
+        <!-- Schede di navigazione Accedi / Registrati -->
+        <div class="w-full bg-darkcard border border-slate-800 rounded-2xl p-1.5 mb-4 flex gap-1.5 animate-entry">
+            <button type="button" id="tab-login-btn" onclick="switchAuthTab('login')" class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-md shadow-blue-600/20">
+                Accedi
+            </button>
+            <button type="button" id="tab-register-btn" onclick="switchAuthTab('register')" class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white">
+                Registrati
+            </button>
+        </div>
+
+        <!-- MODULO REGISTRAZIONE -->
+        <div id="register-card" class="hidden w-full bg-darkcard border border-slate-800 rounded-3xl p-6 shadow-2xl animate-entry">
+            <div class="mb-5">
+                <span class="inline-block px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-xs font-semibold mb-2">Nuovo Account Locale</span>
+                <h2 class="text-xl font-bold text-white">Registrati</h2>
+                <p class="text-xs text-slate-400 mt-1">Crea il tuo profilo locale per proteggere le tue reti Wi-Fi. I dati restano solo su questo telefono.</p>
+            </div>
+
+            <form id="register-form" class="space-y-4">
+                <div>
+                    <label for="reg-username" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Nome utente *</label>
+                    <input type="text" id="reg-username" required autocomplete="username" placeholder="Es. Marco"
+                           class="w-full px-4 py-3.5 bg-darkinput border border-slate-700/80 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition text-base">
+                </div>
+
+                <div>
+                    <label for="reg-password" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Password principale dell'app *</label>
+                    <div class="relative">
+                        <input type="password" id="reg-password" required minlength="4" autocomplete="new-password" placeholder="Minimo 4 caratteri"
+                               class="w-full pl-4 pr-12 py-3.5 bg-darkinput border border-slate-700/80 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition text-base">
+                        <button type="button" onclick="togglePasswordInput('reg-password', this)" aria-label="Mostra o nascondi password"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-white rounded-xl transition active:scale-95">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="reg-password-confirm" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Conferma password *</label>
+                    <div class="relative">
+                        <input type="password" id="reg-password-confirm" required minlength="4" autocomplete="new-password" placeholder="Ripeti la password"
+                               class="w-full pl-4 pr-12 py-3.5 bg-darkinput border border-slate-700/80 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition text-base">
+                        <button type="button" onclick="togglePasswordInput('reg-password-confirm', this)" aria-label="Mostra o nascondi conferma password"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-white rounded-xl transition active:scale-95">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-darkinput/70 border border-slate-700/60 cursor-pointer">
+                    <input type="checkbox" id="reg-enable-bio" checked class="w-5 h-5 rounded accent-blue-600">
+                    <div class="text-xs">
+                        <span class="font-semibold text-white block">Abilita sblocco con Impronta / Volto</span>
+                        <span class="text-slate-400">Accesso rapido tramite sensore del telefono</span>
+                    </div>
+                </label>
+
+                <button type="submit" class="w-full py-4 px-5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-semibold rounded-2xl shadow-lg shadow-blue-600/25 transition text-base mt-2">
+                    Completa Registrazione
+                </button>
+            </form>
+        </div>
+
+        <!-- MODULO LOGIN (ACCEDI) -->
+        <div id="login-card" class="w-full bg-darkcard border border-slate-800 rounded-3xl p-6 shadow-2xl animate-entry">
+            <!-- Avviso se non esiste ancora un account -->
+            <div id="no-account-banner" class="hidden mb-5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3">
+                <p class="text-xs text-amber-300 leading-relaxed">Nessun account trovato su questo dispositivo.</p>
+                <button type="button" onclick="switchAuthTab('register')" class="shrink-0 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-semibold rounded-xl transition">
+                    Registrati
+                </button>
+            </div>
+
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700/70 text-xs text-slate-300 mb-3">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span id="login-user-badge">Area Protetta</span>
+                </div>
+                <h2 class="text-xl font-bold text-white">Accedi</h2>
+                <p class="text-xs text-slate-400 mt-1">Inserisci nome utente e password oppure usa la biometria</p>
+            </div>
+
+            <!-- Pulsante Biometria Principale -->
+            <button type="button" id="btn-bio-login" onclick="loginWithBiometrics()" class="w-full py-4 px-4 mb-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] text-white font-semibold rounded-2xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-3 text-base">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+                <span>Accedi con Impronta / Volto</span>
+            </button>
+
+            <div class="relative flex py-2 items-center mb-5">
+                <div class="flex-grow border-t border-slate-800"></div>
+                <span class="flex-shrink mx-3 text-xs text-slate-500 uppercase tracking-wider font-medium">oppure con credenziali</span>
+                <div class="flex-grow border-t border-slate-800"></div>
+            </div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="login-username" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Nome utente</label>
+                    <input type="text" id="login-username" required autocomplete="username" placeholder="Inserisci il tuo nome utente"
+                           class="w-full px-4 py-3.5 bg-darkinput border border-slate-700/80 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition text-base">
+                </div>
+
+                <div>
+                    <label for="login-password" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Password principale</label>
+                    <div class="relative">
+                        <input type="password" id="login-password" required autocomplete="current-password" placeholder="Inserisci la tua password"
+                               class="w-full pl-4 pr-12 py-3.5 bg-darkinput border border-slate-700/80 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition text-base">
+                        <button type="button" onclick="togglePasswordInput('login-password', this)" aria-label="Mostra o nascondi password"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-white rounded-xl transition active:scale-95">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-4 px-5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-semibold rounded-2xl shadow-lg shadow-blue-600/20 transition text-base">
+                    Accedi
+                </button>
+            </form>
+        </div>
+
+        <!-- Pulsante Installazione PWA anche nella schermata di login -->
+        <button type="button" onclick="triggerPwaInstall()" class="pwa-install-btn mt-6 py-3 px-5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-slate-200 text-sm font-medium flex items-center gap-2.5 transition active:scale-95">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Installa App sul telefono</span>
+        </button>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SCHERMATA 2: APPLICAZIONE PRINCIPALE (RETI WI-FI SALVATE)              -->
+    <!-- ===================================================================== -->
+    <div id="app-screen" class="hidden min-h-screen flex flex-col">
+        <!-- Intestazione Fissa (Sticky Header) -->
+        <header class="sticky top-0 z-30 bg-[#121212]/90 backdrop-blur-md border-b border-slate-800/80 px-4 py-3.5">
+            <div class="max-w-lg mx-auto flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-10 h-10 shrink-0 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <h1 class="text-base font-bold tracking-tight text-white truncate">Wi-Fi Key</h1>
+                        <p class="text-xs text-slate-400 flex items-center gap-1.5">
+                            <span id="network-count" class="text-emerald-400 font-medium">0 reti</span>
+                            <span>•</span>
+                            <span id="header-username" class="truncate max-w-[90px]">Utente</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Controlli rapidi: Impostazioni, Aggiungi, Blocca -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button onclick="openSettingsModal()" aria-label="Impostazioni e Sicurezza" title="Impostazioni e Sicurezza"
+                            class="p-2.5 rounded-xl bg-darkcard hover:bg-slate-800 border border-slate-700/80 text-slate-300 active:scale-95 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </button>
+
+                    <button onclick="lockApp()" aria-label="Blocca app" title="Blocca app / Esci"
+                            class="py-2.5 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 active:scale-95 transition flex items-center gap-1.5 text-xs font-semibold">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span>Blocca</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenuto Principale -->
+        <main class="flex-1 w-full max-w-lg mx-auto px-4 pt-4 pb-28">
+            <!-- Banner Installazione PWA -->
+            <div id="pwa-banner" class="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-blue-600/30 text-blue-400 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold text-white truncate">Usa come App nativa</p>
+                        <p class="text-[11px] text-slate-300 truncate">Installa sulla schermata Home</p>
+                    </div>
+                </div>
+                <button type="button" onclick="triggerPwaInstall()" class="pwa-install-btn shrink-0 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow transition active:scale-95">
+                    Installa App
+                </button>
+            </div>
+
+            <!-- Barra di ricerca rapida -->
+            <div id="search-container" class="mb-4 hidden">
+                <div class="relative">
+                    <svg class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" id="search-input" oninput="renderNetworks()" placeholder="Cerca rete o nota (es. Casa)..."
+                           class="w-full pl-11 pr-4 py-3 bg-darkcard border border-slate-800 rounded-2xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition">
+                </div>
+            </div>
+
+            <!-- Lista delle reti Wi-Fi -->
+            <div id="networks-list" class="space-y-4"></div>
+
+            <!-- Stato Vuoto -->
+            <div id="empty-state" class="hidden text-center py-14 px-6 bg-darkcard/60 border border-slate-800/80 rounded-3xl mt-4">
+                <div class="w-16 h-16 rounded-full bg-slate-800/80 text-blue-400 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-semibold text-white mb-2">Nessuna rete salvata</h2>
+                <p class="text-sm text-slate-400 mb-6 leading-relaxed">
+                    Salva qui le password dei tuoi router Wi-Fi per copiarle con un tocco o generare subito il Codice QR.
+                </p>
+                <button onclick="openFormModal()" class="w-full py-3.5 px-5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-semibold rounded-2xl shadow-lg shadow-blue-600/25 transition inline-flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Aggiungi la tua prima rete</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- Pulsante Flottante in basso per Aggiungere Rete -->
+        <div class="fixed bottom-5 right-5 z-30">
+            <button onclick="openFormModal()" class="py-3.5 px-5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-semibold rounded-full shadow-xl shadow-blue-600/35 flex items-center gap-2 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Nuova Rete</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODALE 1: AGGIUNGI / MODIFICA RETE WI-FI                              -->
+    <!-- ===================================================================== -->
+    <div id="form-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
+        <div class="bg-darkcard border-t sm:border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-5">
+                <h2 id="modal-title" class="text-xl font-bold text-white">Nuova Rete Wi-Fi</h2>
+                <button onclick="closeFormModal()" class="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form id="wifi-form" class="space-y-4">
+                <input type="hidden" id="entry-id">
+
+                <div>
+                    <label for="ssid-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Nome Rete (SSID) *</label>
+                    <input type="text" id="ssid-input" required placeholder="Es. TIM-24891032"
+                           class="w-full px-4 py-3.5 bg-darkinput border border-slate-700/80 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition text-base">
+                </div>
+
+                <div>
+                    <label for="password-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Password Wi-Fi *</label>
+                    <div class="relative">
+                        <input type="text" id="password-input" required placeholder="Inserisci la password del router"
+                               class="w-full px-4 py-3.5 bg-darkinput border border-slate-700/80 rounded-2xl text-white font-mono placeholder-slate-500 focus:outline-none focus:border-blue-500 transition text-base">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="note-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Nota (Facoltativa)</label>
+                        <input type="text" id="note-input" placeholder="Es. Casa, Ufficio..."
+                               class="w-full px-4 py-3.5 bg-darkinput border border-slate-700/80 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition text-base">
+                    </div>
+
+                    <div>
+                        <label for="security-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Sicurezza</label>
+                        <select id="security-input"
+                                class="w-full px-4 py-3.5 bg-darkinput border border-slate-700/80 rounded-2xl text-white focus:outline-none focus:border-blue-500 transition text-base">
+                            <option value="WPA">WPA / WPA2 / WPA3</option>
+                            <option value="WEP">WEP</option>
+                            <option value="nopass">Nessuna (Aperta)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="closeFormModal()" class="flex-1 py-3.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-2xl transition">
+                        Annulla
+                    </button>
+                    <button type="submit" class="flex-1 py-3.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-2xl shadow-lg shadow-blue-600/25 transition">
+                        Salva Rete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODALE 2: GENERATORE CODICE QR WI-FI                                  -->
+    <!-- ===================================================================== -->
+    <div id="qr-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+        <div class="bg-darkcard border border-slate-800 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">Connessione Rapida</span>
+                <button onclick="closeQrModal()" class="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <h3 id="qr-ssid-title" class="text-xl font-bold text-white mt-2 truncate">Nome Rete</h3>
+            <p id="qr-note-subtitle" class="text-xs text-slate-400 mb-5">Inquadra con la fotocamera o Google Lens</p>
+
+            <div class="bg-white p-5 rounded-3xl inline-block shadow-inner mb-5">
+                <div id="qr-container"></div>
+            </div>
+
+            <p class="text-xs text-slate-400 leading-relaxed mb-5 px-2">
+                Apri <strong class="text-slate-200">Google Lens</strong> o la <strong class="text-slate-200">Fotocamera</strong> del telefono per collegarti subito senza digitare nulla.
+            </p>
+
+            <button onclick="closeQrModal()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-2xl transition">
+                Chiudi Codice QR
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODALE 3: IMPOSTAZIONI ACCOUNT & SICUREZZA (CON DOPPIO SBLOCCO)       -->
+    <!-- ===================================================================== -->
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4">
+        <div class="bg-darkcard border-t sm:border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Impostazioni & Sicurezza</h2>
+                    <p class="text-xs text-slate-400">Gestione account locale e cassaforte</p>
+                </div>
+                <button onclick="closeSettingsModal()" class="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- SEZIONE BLOCCATA: Richiede Biometria o Password Principale -->
+            <div id="security-locked-view" class="bg-darkinput/80 border border-slate-700/80 rounded-2xl p-5 text-center">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-white mb-1">Sicurezza e Database</h3>
+                <p class="text-xs text-slate-400 mb-5 leading-relaxed">
+                    Per vedere o modificare la password dell'app e gestire il database locale è richiesta una nuova verifica di identità.
+                </p>
+
+                <button type="button" onclick="unlockSecurityWithBiometrics()" class="w-full py-3.5 px-4 mb-3 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-semibold rounded-2xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2.5 text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                    </svg>
+                    <span>Verifica con Impronta / Volto</span>
+                </button>
+
+                <form id="unlock-security-form" class="mt-3 pt-3 border-t border-slate-700/70">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5 text-left">Oppure inserisci password attuale</label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <input type="password" id="security-verify-password" required placeholder="Password app..."
+                                   class="w-full pl-3.5 pr-11 py-3 bg-darkcard border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+                            <button type="button" onclick="togglePasswordInput('security-verify-password', this)" aria-label="Mostra o nascondi password"
+                                    class="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-white rounded-lg transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </button>
+                        </div>
+                        <button type="submit" class="px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition shrink-0">
+                            Sblocca
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- SEZIONE SBLOCCATA: Gestione Account, Biometria e Database -->
+            <div id="security-unlocked-view" class="hidden space-y-5">
+                <!-- Info Account e Password Attuale -->
+                <div class="bg-darkinput border border-slate-700/80 rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Sezione Sbloccata</span>
+                        <span class="text-xs text-slate-400" id="settings-bio-status">Biometria attiva</span>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-400">Nome utente locale</p>
+                        <p id="settings-username-display" class="text-base font-bold text-white">-</p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-400 mb-1">Password principale attuale</p>
+                        <div class="flex items-center justify-between bg-darkcard px-3.5 py-2.5 rounded-xl border border-slate-700/70">
+                            <span id="settings-current-pass" class="font-mono text-sm text-white">••••••••</span>
+                            <button type="button" onclick="toggleSettingsPassword()" class="text-xs font-semibold text-blue-400 hover:text-blue-300 px-2 py-1">
+                                Mostra / Nascondi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modifica Password -->
+                    <form id="change-password-form" class="pt-2 border-t border-slate-700/70 space-y-2.5">
+                        <label class="block text-xs font-semibold text-slate-300">Cambia password dell'app</label>
+                        <div class="flex gap-2">
+                            <div class="relative flex-1">
+                                <input type="password" id="new-app-password" minlength="4" required placeholder="Nuova password (min. 4)"
+                                       class="w-full pl-3.5 pr-11 py-2.5 bg-darkcard border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+                                <button type="button" onclick="togglePasswordInput('new-app-password', this)" aria-label="Mostra o nascondi nuova password"
+                                        class="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-white rounded-lg transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
+                            <button type="submit" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shrink-0">
+                                Aggiorna
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Registra / Aggiorna Sensore Biometrico -->
+                    <div class="pt-2 border-t border-slate-700/70">
+                        <button type="button" onclick="registerBiometricCredential(true)" class="w-full py-2.5 px-3 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                            </svg>
+                            <span>Configura / Aggiorna Impronta o Volto</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Gestione Database Locale -->
+                <div class="bg-darkinput border border-slate-700/80 rounded-2xl p-4 space-y-3">
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Gestione Database Locale</h4>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button type="button" onclick="exportDatabase()" class="py-3 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5">
+                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span>Esporta Backup</span>
+                        </button>
+                        <label class="py-3 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span>Importa Backup</span>
+                            <input type="file" accept=".json" onchange="importDatabase(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODALE 4: CONFERMA ELIMINAZIONE RETE                                  -->
+    <!-- ===================================================================== -->
+    <div id="delete-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-darkcard border border-slate-800 w-full max-w-xs rounded-3xl p-6 text-center shadow-2xl">
+            <div class="w-12 h-12 rounded-full bg-rose-500/15 text-rose-500 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1">Eliminare questa rete?</h3>
+            <p id="delete-network-name" class="text-sm text-slate-400 mb-6">L'operazione non può essere annullata.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-2xl transition">
+                    Annulla
+                </button>
+                <button id="confirm-delete-btn" class="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-2xl shadow-lg shadow-rose-600/25 transition">
+                    Elimina
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODALE 5: GUIDA INSTALLAZIONE PWA (SE FILE LOCALE / MANUALE)          -->
+    <!-- ===================================================================== -->
+    <div id="pwa-guide-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+        <div class="bg-darkcard border border-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white">Installa sul telefono</h3>
+                <button onclick="document.getElementById('pwa-guide-modal').classList.add('hidden')" class="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                Per aggiungere l'app alla schermata Home come applicazione a schermo intero:
+            </p>
+            <ol class="space-y-3 text-xs text-slate-300 mb-6 list-decimal list-inside bg-darkinput p-4 rounded-2xl border border-slate-700/70">
+                <li>Apri questa pagina in <strong>Google Chrome</strong> (Android) o <strong>Safari</strong> (iPhone).</li>
+                <li>Tocca il menu <strong>⋮</strong> (in alto a destra su Chrome) o <strong>Condividi</strong> (su iPhone).</li>
+                <li>Seleziona <strong>"Aggiungi a schermata Home"</strong> o <strong>"Installa app"</strong>.</li>
+                <li>Conferma per avere l'icona blu <strong>Wi-Fi Key</strong> a schermo intero!</li>
+            </ol>
+            <button onclick="document.getElementById('pwa-guide-modal').classList.add('hidden')" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-2xl transition">
+                Ho capito
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- NOTIFICA TOAST                                                        -->
+    <!-- ===================================================================== -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 translate-y-4">
+        <div class="bg-emerald-600 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 font-semibold text-sm whitespace-nowrap">
+            <svg id="toast-icon" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span id="toast-message">Operazione completata!</span>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. SERVICE WORKER INLINE E GESTIONE INSTALLAZIONE PWA
+        // =========================================================================
+        let deferredInstallPrompt = null;
+
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
+            try {
+                const swCode = `
+                    const CACHE_NAME = 'wifi-key-v1';
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(
+                            caches.match(e.request).then((cached) => cached || fetch(e.request).catch(() => cached))
+                        );
+                    });
+                `;
+                const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(swBlob);
+                navigator.serviceWorker.register(swUrl).catch(() => {});
+            } catch (e) {}
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            document.querySelectorAll('.pwa-install-btn').forEach(btn => {
+                btn.classList.add('ring-2', 'ring-blue-400');
+            });
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            const banner = document.getElementById('pwa-banner');
+            if (banner) banner.classList.add('hidden');
+            showToast('App installata sul telefono!', 'success');
+        });
+
+        async function triggerPwaInstall() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    deferredInstallPrompt = null;
+                }
+            } else {
+                document.getElementById('pwa-guide-modal').classList.remove('hidden');
+            }
+        }
+
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            document.addEventListener('DOMContentLoaded', () => {
+                const banner = document.getElementById('pwa-banner');
+                if (banner) banner.classList.add('hidden');
+            });
+        }
+
+        // =========================================================================
+        // 2. STATO APPLICAZIONE E STORAGE LOCALE (100% OFFLINE)
+        // =========================================================================
+        const USER_STORAGE_KEY = 'wifi_vault_user_v1';
+        const NETWORKS_STORAGE_KEY = 'le_mie_password_wifi_v1';
+
+        let currentUser = null;
+        let networks = [];
+        let visiblePasswords = {};
+        let networkIdToDelete = null;
+        let isSettingsPasswordVisible = false;
+
+        // =========================================================================
+        // UTILITY: MOSTRA / NASCONDI PASSWORD CON ICONA OCCHIO
+        // =========================================================================
+        const EYE_OPEN_SVG = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+        const EYE_CLOSED_SVG = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>`;
+
+        function togglePasswordInput(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.innerHTML = isHidden ? EYE_CLOSED_SVG : EYE_OPEN_SVG;
+            btn.classList.toggle('text-blue-400', isHidden);
+            btn.classList.toggle('text-slate-400', !isHidden);
+        }
+
+        function loadUser() {
+            try {
+                const raw = localStorage.getItem(USER_STORAGE_KEY);
+                currentUser = raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                currentUser = null;
+            }
+        }
+
+        function saveUser(userObj) {
+            currentUser = userObj;
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
+        }
+
+        function loadNetworks() {
+            try {
+                const saved = localStorage.getItem(NETWORKS_STORAGE_KEY);
+                networks = saved ? JSON.parse(saved) : [];
+            } catch (e) {
+                networks = [];
+            }
+        }
+
+        function saveNetworks() {
+            localStorage.setItem(NETWORKS_STORAGE_KEY, JSON.stringify(networks));
+            renderNetworks();
+        }
+
+        // =========================================================================
+        // 3. AUTENTICAZIONE: REGISTRAZIONE, LOGIN E WEBAUTHN (BIOMETRIA)
+        // =========================================================================
+        function switchAuthTab(tab) {
+            const loginCard = document.getElementById('login-card');
+            const registerCard = document.getElementById('register-card');
+            const tabLoginBtn = document.getElementById('tab-login-btn');
+            const tabRegisterBtn = document.getElementById('tab-register-btn');
+
+            if (tab === 'login') {
+                loginCard.classList.remove('hidden');
+                registerCard.classList.add('hidden');
+                tabLoginBtn.className = 'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-md shadow-blue-600/20';
+                tabRegisterBtn.className = 'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white';
+                updateLoginCardState();
+            } else {
+                registerCard.classList.remove('hidden');
+                loginCard.classList.add('hidden');
+                tabRegisterBtn.className = 'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-md shadow-blue-600/20';
+                tabLoginBtn.className = 'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white';
+            }
+        }
+
+        function updateLoginCardState() {
+            const noAccountBanner = document.getElementById('no-account-banner');
+            const userBadge = document.getElementById('login-user-badge');
+            const loginUsernameInput = document.getElementById('login-username');
+
+            if (currentUser) {
+                noAccountBanner.classList.add('hidden');
+                userBadge.textContent = `Profilo: ${currentUser.username}`;
+                if (loginUsernameInput && !loginUsernameInput.value) {
+                    loginUsernameInput.value = currentUser.username;
+                }
+            } else {
+                noAccountBanner.classList.remove('hidden');
+                userBadge.textContent = 'Nessun profilo registrato';
+            }
+        }
+
+        function initAuthView() {
+            loadUser();
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('login-password').value = '';
+
+            if (!currentUser) {
+                switchAuthTab('register');
+            } else {
+                switchAuthTab('login');
+            }
+        }
+
+        // Gestione invio form Registrazione
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirm = document.getElementById('reg-password-confirm').value;
+            const enableBio = document.getElementById('reg-enable-bio').checked;
+
+            if (!username || password.length < 4) {
+                showToast('Inserisci nome utente e password di almeno 4 caratteri', 'error');
+                return;
+            }
+            if (password !== confirm) {
+                showToast('Le due password non coincidono!', 'error');
+                return;
+            }
+
+            const newUser = {
+                username: username,
+                password: password,
+                biometricEnabled: enableBio,
+                credentialId: null
+            };
+            saveUser(newUser);
+
+            if (enableBio) {
+                await registerBiometricCredential(false);
+            }
+
+            // Svuota i campi di registrazione e mostra la schermata Accedi
+            document.getElementById('register-form').reset();
+            document.getElementById('login-username').value = username;
+            document.getElementById('login-password').value = '';
+            switchAuthTab('login');
+            showToast('Registrazione completata! Ora effettua l\'accesso.', 'success');
+            setTimeout(() => document.getElementById('login-password').focus(), 150);
+        });
+
+        // Gestione invio form Login con Nome utente e Password
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!currentUser) {
+                showToast('Registrati prima di accedere!', 'error');
+                switchAuthTab('register');
+                return;
+            }
+            const inputUsername = document.getElementById('login-username').value.trim();
+            const inputPass = document.getElementById('login-password').value;
+
+            if (inputUsername.toLowerCase() === currentUser.username.toLowerCase() && inputPass === currentUser.password) {
+                unlockApp();
+            } else {
+                showToast('Nome utente o password errati!', 'error');
+                document.getElementById('login-password').select();
+            }
+        });
+
+        // Registrazione credenziale biometrica locale tramite WebAuthn (Platform Authenticator)
+        async function registerBiometricCredential(showFeedback = true) {
+            if (!window.PublicKeyCredential) {
+                if (showFeedback) showToast('Biometria non supportata su questo browser/protocollo', 'error');
+                return false;
+            }
+            try {
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+                const userId = new Uint8Array(16);
+                window.crypto.getRandomValues(userId);
+
+                const credential = await navigator.credentials.create({
+                    publicKey: {
+                        challenge: challenge,
+                        rp: {
+                            name: "Wi-Fi Key"
+                        },
+                        user: {
+                            id: userId,
+                            name: currentUser.username,
+                            displayName: currentUser.username
+                        },
+                        pubKeyCredParams: [
+                            { type: "public-key", alg: -7 },
+                            { type: "public-key", alg: -257 }
+                        ],
+                        authenticatorSelection: {
+                            authenticatorAttachment: "platform",
+                            userVerification: "required"
+                        },
+                        timeout: 60000
+                    }
+                });
+
+                if (credential) {
+                    const rawIdArray = Array.from(new Uint8Array(credential.rawId));
+                    currentUser.credentialId = btoa(String.fromCharCode.apply(null, rawIdArray));
+                    currentUser.biometricEnabled = true;
+                    saveUser(currentUser);
+                    if (showFeedback) showToast('Impronta / Volto configurati!', 'success');
+                    updateSettingsBioStatus();
+                    return true;
+                }
+            } catch (err) {
+                if (showFeedback) {
+                    showToast('Sensore non disponibile (es. file locale). Usa la password.', 'error');
+                }
+            }
+            return false;
+        }
+
+        // Verifica Biometrica WebAuthn (usata sia per Login che per sbloccare Impostazioni)
+        async function verifyBiometricChallenge() {
+            if (!window.PublicKeyCredential) {
+                showToast('Biometria non disponibile qui. Usa la password principale.', 'error');
+                return false;
+            }
+            try {
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+
+                const publicKeyOptions = {
+                    challenge: challenge,
+                    userVerification: "required",
+                    timeout: 60000
+                };
+
+                if (currentUser && currentUser.credentialId) {
+                    const binaryStr = atob(currentUser.credentialId);
+                    const idBytes = new Uint8Array(binaryStr.length);
+                    for (let i = 0; i < binaryStr.length; i++) {
+                        idBytes[i] = binaryStr.charCodeAt(i);
+                    }
+                    publicKeyOptions.allowCredentials = [{
+                        id: idBytes,
+                        type: 'public-key'
+                    }];
+                }
+
+                const assertion = await navigator.credentials.get({ publicKey: publicKeyOptions });
+                return !!assertion;
+            } catch (err) {
+                showToast('Verifica biometrica annullata o non disponibile. Usa la password.', 'error');
+                return false;
+            }
+        }
+
+        async function loginWithBiometrics() {
+            if (!currentUser) {
+                showToast('Crea prima un account nella scheda Registrati!', 'error');
+                switchAuthTab('register');
+                return;
+            }
+            const verified = await verifyBiometricChallenge();
+            if (verified) {
+                unlockApp();
+            }
+        }
+
+        function unlockApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('header-username').textContent = currentUser.username;
+            loadNetworks();
+            renderNetworks();
+            showToast(`Bentornato, ${currentUser.username}!`, 'success');
+        }
+
+        function lockApp() {
+            visiblePasswords = {};
+            closeSettingsModal();
+            closeFormModal();
+            closeQrModal();
+            initAuthView();
+            showToast('App bloccata con successo', 'success');
+        }
+
+        // =========================================================================
+        // 4. IMPOSTAZIONI ACCOUNT E DOPPIO SBLOCCO SICUREZZA
+        // =========================================================================
+        function openSettingsModal() {
+            document.getElementById('security-locked-view').classList.remove('hidden');
+            document.getElementById('security-unlocked-view').classList.add('hidden');
+            document.getElementById('security-verify-password').value = '';
+            isSettingsPasswordVisible = false;
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.add('hidden');
+            isSettingsPasswordVisible = false;
+        }
+
+        async function unlockSecurityWithBiometrics() {
+            const verified = await verifyBiometricChallenge();
+            if (verified) {
+                revealSecuritySection();
+            }
+        }
+
+        document.getElementById('unlock-security-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pass = document.getElementById('security-verify-password').value;
+            if (currentUser && pass === currentUser.password) {
+                revealSecuritySection();
+            } else {
+                showToast('Password di verifica errata!', 'error');
+            }
+        });
+
+        function revealSecuritySection() {
+            document.getElementById('security-locked-view').classList.add('hidden');
+            document.getElementById('security-unlocked-view').classList.remove('hidden');
+            document.getElementById('settings-username-display').textContent = currentUser.username;
+            document.getElementById('settings-current-pass').textContent = '••••••••';
+            isSettingsPasswordVisible = false;
+            updateSettingsBioStatus();
+            showToast('Sezione Sicurezza sbloccata', 'success');
+        }
+
+        function updateSettingsBioStatus() {
+            const statusEl = document.getElementById('settings-bio-status');
+            if (currentUser && currentUser.credentialId) {
+                statusEl.textContent = 'Sensore biometrico associato';
+                statusEl.className = 'text-xs text-emerald-400 font-medium';
+            } else {
+                statusEl.textContent = 'Solo password attiva';
+                statusEl.className = 'text-xs text-slate-400';
+            }
+        }
+
+        function toggleSettingsPassword() {
+            isSettingsPasswordVisible = !isSettingsPasswordVisible;
+            const passEl = document.getElementById('settings-current-pass');
+            passEl.textContent = isSettingsPasswordVisible ? currentUser.password : '••••••••';
+        }
+
+        document.getElementById('change-password-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newPass = document.getElementById('new-app-password').value;
+            if (newPass.length < 4) {
+                showToast('La nuova password deve avere almeno 4 caratteri', 'error');
+                return;
+            }
+            currentUser.password = newPass;
+            saveUser(currentUser);
+            document.getElementById('new-app-password').value = '';
+            if (isSettingsPasswordVisible) {
+                document.getElementById('settings-current-pass').textContent = newPass;
+            }
+            showToast('Password principale aggiornata!', 'success');
+        });
+
+        // Esporta e Importa Database JSON
+        function exportDatabase() {
+            const backup = {
+                app: 'Wi-Fi Key',
+                exportedAt: new Date().toISOString(),
+                networks: networks
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_wifi_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Backup esportato!', 'success');
+        }
+
+        function importDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data && Array.isArray(data.networks)) {
+                        networks = data.networks;
+                        saveNetworks();
+                        showToast(`Importate ${networks.length} reti Wi-Fi!`, 'success');
+                    } else {
+                        showToast('File di backup non valido', 'error');
+                    }
+                } catch (err) {
+                    showToast('Errore nella lettura del file', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // =========================================================================
+        // 5. GESTIONE RETI WI-FI (CRUD, COPIA RAPIDA E QR CODE)
+        // =========================================================================
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeWifiQrField(str) {
+            return String(str).replace(/([\\;,:"])/g, '\\$1');
+        }
+
+        function renderNetworks() {
+            const listEl = document.getElementById('networks-list');
+            const emptyEl = document.getElementById('empty-state');
+            const countEl = document.getElementById('network-count');
+            const searchContainer = document.getElementById('search-container');
+            const searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+
+            countEl.textContent = networks.length === 1 ? '1 rete' : `${networks.length} reti`;
+
+            if (networks.length > 0) {
+                searchContainer.classList.remove('hidden');
+            } else {
+                searchContainer.classList.add('hidden');
+            }
+
+            const filtered = networks.filter(net =>
+                net.ssid.toLowerCase().includes(searchQuery) ||
+                (net.note && net.note.toLowerCase().includes(searchQuery))
+            );
+
+            if (networks.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-10 px-4 bg-darkcard/50 rounded-3xl border border-slate-800/60">
+                        <p class="text-slate-400 text-sm">Nessuna rete corrisponde a "<span class="text-white font-medium">${escapeHtml(searchQuery)}</span>"</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(net => {
+                const isVisible = !!visiblePasswords[net.id];
+                const hasPassword = net.security !== 'nopass' && net.password.length > 0;
+                const displayPassword = !hasPassword
+                    ? '<span class="text-slate-500 italic font-sans text-sm">Rete aperta (nessuna password)</span>'
+                    : (isVisible ? escapeHtml(net.password) : '••••••••••••');
+
+                return `
+                <article class="bg-darkcard border border-slate-800/90 rounded-3xl p-5 shadow-lg transition hover:border-slate-700/80">
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h2 class="text-lg font-bold text-white truncate">${escapeHtml(net.ssid)}</h2>
+                                ${net.note ? `<span class="px-2.5 py-0.5 text-xs font-medium bg-blue-500/15 text-blue-400 border border-blue-500/20 rounded-full">${escapeHtml(net.note)}</span>` : ''}
+                            </div>
+                            <span class="text-[11px] font-medium text-slate-500 uppercase tracking-wider mt-0.5 block">
+                                Sicurezza: ${net.security === 'nopass' ? 'Aperta' : net.security}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button onclick="openFormModal('${net.id}')" aria-label="Modifica rete" title="Modifica"
+                                    class="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+                            <button onclick="askDeleteNetwork('${net.id}')" aria-label="Elimina rete" title="Elimina"
+                                    class="p-2.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-darkinput border border-slate-700/60 rounded-2xl px-4 py-3 mb-4 flex items-center justify-between gap-2">
+                        <div class="font-mono text-base text-slate-100 truncate select-all">${displayPassword}</div>
+                        ${hasPassword ? `
+                        <button type="button" onclick="togglePasswordVisibility('${net.id}')"
+                                class="shrink-0 py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 flex items-center gap-1.5 transition active:scale-95">
+                            ${isVisible ? `
+                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                </svg>
+                                <span>Nascondi</span>
+                            ` : `
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <span>Mostra</span>
+                            `}
+                        </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" onclick="copyPassword('${net.id}')" ${!hasPassword ? 'disabled' : ''}
+                                class="py-3.5 px-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-95 ${hasPassword ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/20' : 'bg-slate-800/50 text-slate-500 cursor-not-allowed'}">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                            <span>Copia password</span>
+                        </button>
+
+                        <button type="button" onclick="openQrModal('${net.id}')"
+                                class="py-3.5 px-3 rounded-2xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-400 font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-95">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
+                            <span>Genera QR</span>
+                        </button>
+                    </div>
+                </article>
+                `;
+            }).join('');
+        }
+
+        function togglePasswordVisibility(id) {
+            visiblePasswords[id] = !visiblePasswords[id];
+            renderNetworks();
+        }
+
+        function copyPassword(id) {
+            const net = networks.find(n => n.id === id);
+            if (!net || !net.password) return;
+
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = net.password;
+            tempTextarea.setAttribute('readonly', '');
+            tempTextarea.style.position = 'fixed';
+            tempTextarea.style.opacity = '0';
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            tempTextarea.setSelectionRange(0, 99999);
+
+            let success = false;
+            try {
+                success = document.execCommand('copy');
+            } catch (err) {
+                success = false;
+            }
+            document.body.removeChild(tempTextarea);
+
+            if (success) {
+                showToast('Password copiata!', 'success');
+            } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(net.password).then(() => showToast('Password copiata!', 'success'));
+            }
+        }
+
+        function openFormModal(editId = null) {
+            const modal = document.getElementById('form-modal');
+            const titleEl = document.getElementById('modal-title');
+            const idInput = document.getElementById('entry-id');
+            const ssidInput = document.getElementById('ssid-input');
+            const passInput = document.getElementById('password-input');
+            const noteInput = document.getElementById('note-input');
+            const secInput = document.getElementById('security-input');
+
+            if (editId) {
+                const net = networks.find(n => n.id === editId);
+                if (!net) return;
+                titleEl.textContent = 'Modifica Rete Wi-Fi';
+                idInput.value = net.id;
+                ssidInput.value = net.ssid;
+                passInput.value = net.password;
+                noteInput.value = net.note || '';
+                secInput.value = net.security || 'WPA';
+            } else {
+                titleEl.textContent = 'Nuova Rete Wi-Fi';
+                idInput.value = '';
+                ssidInput.value = '';
+                passInput.value = '';
+                noteInput.value = '';
+                secInput.value = 'WPA';
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => ssidInput.focus(), 100);
+        }
+
+        function closeFormModal() {
+            document.getElementById('form-modal').classList.add('hidden');
+        }
+
+        document.getElementById('security-input').addEventListener('change', (e) => {
+            const passInput = document.getElementById('password-input');
+            if (e.target.value === 'nopass') {
+                passInput.removeAttribute('required');
+                passInput.placeholder = 'Non richiesta per rete aperta';
+            } else {
+                passInput.setAttribute('required', 'true');
+                passInput.placeholder = 'Inserisci la password del router';
+            }
+        });
+
+        document.getElementById('wifi-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('entry-id').value;
+            const ssid = document.getElementById('ssid-input').value.trim();
+            const password = document.getElementById('password-input').value;
+            const note = document.getElementById('note-input').value.trim();
+            const security = document.getElementById('security-input').value;
+
+            if (!ssid) return;
+
+            if (id) {
+                const index = networks.findIndex(n => n.id === id);
+                if (index !== -1) {
+                    networks[index] = { ...networks[index], ssid, password, note, security };
+                    showToast('Rete aggiornata!', 'success');
+                }
+            } else {
+                const newEntry = {
+                    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+                    ssid,
+                    password,
+                    note,
+                    security,
+                    createdAt: Date.now()
+                };
+                networks.unshift(newEntry);
+                showToast('Rete Wi-Fi salvata!', 'success');
+            }
+
+            saveNetworks();
+            closeFormModal();
+        });
+
+        function openQrModal(id) {
+            const net = networks.find(n => n.id === id);
+            if (!net) return;
+
+            const modal = document.getElementById('qr-modal');
+            const container = document.getElementById('qr-container');
+            document.getElementById('qr-ssid-title').textContent = net.ssid;
+            document.getElementById('qr-note-subtitle').textContent = net.note
+                ? `${net.note} • Inquadra con Google Lens`
+                : 'Inquadra con la fotocamera o Google Lens';
+
+            const escapedSsid = escapeWifiQrField(net.ssid);
+            const escapedPass = escapeWifiQrField(net.password || '');
+            const secType = net.security || 'WPA';
+            const wifiPayload = secType === 'nopass'
+                ? `WIFI:T:nopass;S:${escapedSsid};;`
+                : `WIFI:T:${secType};S:${escapedSsid};P:${escapedPass};;`;
+
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: wifiPayload,
+                width: 220,
+                height: 220,
+                colorDark: '#0f172a',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeQrModal() {
+            document.getElementById('qr-modal').classList.add('hidden');
+        }
+
+        function askDeleteNetwork(id) {
+            const net = networks.find(n => n.id === id);
+            if (!net) return;
+            networkIdToDelete = id;
+            document.getElementById('delete-network-name').textContent = `Vuoi eliminare "${net.ssid}"?`;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            networkIdToDelete = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+
+        document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+            if (!networkIdToDelete) return;
+            networks = networks.filter(n => n.id !== networkIdToDelete);
+            delete visiblePasswords[networkIdToDelete];
+            saveNetworks();
+            closeDeleteModal();
+            showToast('Rete eliminata', 'success');
+        });
+
+        // =========================================================================
+        // 6. NOTIFICHE TOAST E INIZIALIZZAZIONE
+        // =========================================================================
+        let toastTimeout = null;
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const badge = toast.firstElementChild;
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-message').textContent = message;
+
+            if (type === 'error') {
+                badge.className = 'bg-rose-600 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 font-semibold text-sm max-w-[90vw]';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />';
+            } else {
+                badge.className = 'bg-emerald-600 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 font-semibold text-sm max-w-[90vw]';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />';
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4');
+            }, 2600);
+        }
+
+        ['form-modal', 'qr-modal', 'delete-modal', 'settings-modal', 'pwa-guide-modal'].forEach(modalId => {
+            document.getElementById(modalId).addEventListener('click', (e) => {
+                if (e.target.id === modalId) {
+                    e.target.classList.add('hidden');
+                }
+            });
+        });
+
+        // Avvio dell'app: parte sempre dalla schermata di sicurezza (Registrati / Accedi)
+        document.addEventListener('DOMContentLoaded', () => {
+            initAuthView();
+        });
+    </script>
+</body>
+</html>
+```
